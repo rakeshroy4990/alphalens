@@ -1,8 +1,14 @@
-# Environment
+# Environment — never commit real env files
 .env
+**/.env
 .env.*
+**/.env.*
+*.env
+**/*.env
+infrastructure/gcp/project.env
 !.env.example
 !**/.env.example
+!infrastructure/gcp/project.env.example
 
 # Node
 node_modules/

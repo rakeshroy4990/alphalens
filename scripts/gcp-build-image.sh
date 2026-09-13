@@ -3,13 +3,18 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# shellcheck disable=SC1091
-source "${ROOT}/infrastructure/gcp/project.env"
+if [[ -f "${ROOT}/infrastructure/gcp/project.env" ]]; then
+  # shellcheck disable=SC1091
+  source "${ROOT}/infrastructure/gcp/project.env"
+elif [[ -f "${ROOT}/infrastructure/gcp/project.env.example" ]]; then
+  # shellcheck disable=SC1091
+  source "${ROOT}/infrastructure/gcp/project.env.example"
+fi
 IMAGE_LOCAL="${IMAGE_LOCAL:-alphalens:latest}"
-PROJECT_ID="${PROJECT_ID:-${GCP_PROJECT_ID}}"
-LOCATION="${LOCATION:-${GCP_LOCATION}}"
-REPOSITORY="${REPOSITORY:-${GCP_REPOSITORY}}"
-IMAGE_NAME="${IMAGE_NAME:-${GCP_IMAGE}}"
+PROJECT_ID="${PROJECT_ID:-${GCP_PROJECT_ID:-alphalens-508509}}"
+LOCATION="${LOCATION:-${GCP_LOCATION:-asia-south1}}"
+REPOSITORY="${REPOSITORY:-${GCP_REPOSITORY:-alphalens}}"
+IMAGE_NAME="${IMAGE_NAME:-${GCP_IMAGE:-alphalens}}"
 TAG="${TAG:-$(git -C "${ROOT}" rev-parse --short HEAD 2>/dev/null || echo local)}"
 # Cloud Run / typical GCE VMs need linux/amd64. Apple Silicon builds arm64 unless you set this.
 PLATFORM="${PLATFORM:-}"
