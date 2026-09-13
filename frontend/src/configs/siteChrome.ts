@@ -5,7 +5,7 @@ export interface NavItem {
 }
 
 export const siteNav: NavItem[] = [
-  { id: 'home', label: 'Home', to: '/' },
+  { id: 'home', label: 'Home', to: '/home' },
   { id: 'screener', label: 'Screener', to: '/screener' },
   { id: 'watchlists', label: 'Watchlists', to: '/watchlists' },
   { id: 'portfolio', label: 'Portfolio', to: '/portfolio' }

@@ -80,13 +80,16 @@ public class JdbcUrlEnvironmentPostProcessor implements EnvironmentPostProcessor
 
     static ResolvedJdbc resolve(String rawUrl, String passwordFromEnv) {
         String url = rawUrl.trim();
-        if (url.contains("{{password}}")) {
+        boolean placeholder = url.contains("{{password}}");
+        if (placeholder) {
             if (passwordFromEnv == null || passwordFromEnv.isBlank() || "{{password}}".equals(passwordFromEnv)) {
                 throw new IllegalStateException(
                         "SPRING_DATASOURCE_URL contains {{password}} but SPRING_DATASOURCE_PASSWORD is empty."
                 );
             }
-            url = url.replace("{{password}}", passwordFromEnv);
+            // Keep the password on JdbcConnectionDetails only. Splicing it into the
+            // URI breaks when the secret contains @ : / # % or similar.
+            url = url.replace(":{{password}}", "").replace("{{password}}", "");
         }
         url = toJdbcUrl(url);
 
@@ -103,7 +106,7 @@ public class JdbcUrlEnvironmentPostProcessor implements EnvironmentPostProcessor
                 } else {
                     username = userInfo.substring(0, colon);
                     String embedded = userInfo.substring(colon + 1);
-                    if (!embedded.isBlank()) {
+                    if (!placeholder && !embedded.isBlank()) {
                         password = embedded;
                     }
                 }

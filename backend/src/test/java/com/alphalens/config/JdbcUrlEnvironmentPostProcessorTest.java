@@ -25,6 +25,34 @@ class JdbcUrlEnvironmentPostProcessorTest {
     }
 
     @Test
+    void acceptsSupabaseDirectUri() {
+        var resolved = JdbcUrlEnvironmentPostProcessor.resolve(
+                "postgresql://postgres:{{password}}@db.nbityfnkiavbzkkacaxm.supabase.co:5432/postgres",
+                "s3cret"
+        );
+
+        assertThat(resolved.url()).isEqualTo(
+                "jdbc:postgresql://db.nbityfnkiavbzkkacaxm.supabase.co:5432/postgres?sslmode=require"
+        );
+        assertThat(resolved.username()).isEqualTo("postgres");
+        assertThat(resolved.password()).isEqualTo("s3cret");
+    }
+
+    @Test
+    void keepsSecretPasswordOutOfUriWhenPlaceholderIsUsed() {
+        var resolved = JdbcUrlEnvironmentPostProcessor.resolve(
+                "postgresql://postgres:{{password}}@db.nbityfnkiavbzkkacaxm.supabase.co:5432/postgres",
+                "p@ss:word/with#special"
+        );
+
+        assertThat(resolved.url()).isEqualTo(
+                "jdbc:postgresql://db.nbityfnkiavbzkkacaxm.supabase.co:5432/postgres?sslmode=require"
+        );
+        assertThat(resolved.username()).isEqualTo("postgres");
+        assertThat(resolved.password()).isEqualTo("p@ss:word/with#special");
+    }
+
+    @Test
     void rewritesPostgresqlSchemeToJdbc() {
         assertThat(JdbcUrlEnvironmentPostProcessor.normalize(
                 "postgresql://localhost:5432/alphalens"

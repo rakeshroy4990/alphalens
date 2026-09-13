@@ -30,3 +30,4 @@ backend/build/
 
 # Logs
 *.log
+**/firebase-debug.log

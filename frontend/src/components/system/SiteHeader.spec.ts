@@ -8,7 +8,8 @@ describe('SiteHeader', () => {
     const router = createRouter({
       history: createWebHistory(),
       routes: [
-        { path: '/', component: { template: '<div />' } },
+        { path: '/', redirect: '/home' },
+        { path: '/home', component: { template: '<div />' } },
         { path: '/screener', component: { template: '<div />' } }
       ]
     });

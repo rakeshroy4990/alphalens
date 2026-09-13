@@ -3,7 +3,7 @@ set -euo pipefail
 
 PORT="${PORT:-8080}"
 BACKEND_PORT="${BACKEND_PORT:-8088}"
-JAVA_OPTS="${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom}"
+JAVA_OPTS="${JAVA_OPTS:--XX:MaxRAMPercentage=50.0 -Djava.security.egd=file:/dev/./urandom}"
 
 sed -e "s/__PORT__/${PORT}/g" -e "s/__BACKEND_PORT__/${BACKEND_PORT}/g" \
     /etc/nginx/alphalens.conf.template > /etc/nginx/nginx.conf

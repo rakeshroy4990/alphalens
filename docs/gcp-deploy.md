@@ -54,7 +54,7 @@ PUSH=1 ./scripts/gcp-build-image.sh
 
 # Or Cloud Build (amd64 — use this for Cloud Run)
 gcloud builds submit --project=alphalens-508509 --config=cloudbuild.yaml \
-  --substitutions=_LOCATION=asia-south1,_REPOSITORY=alphalens,_IMAGE=alphalens
+  --substitutions=_LOCATION=asia-south1,_REPOSITORY=alphalens,_IMAGE=alphalens,_TAG=latest
 ```
 
 Image:
@@ -74,7 +74,7 @@ Pick one:
 | Option | How |
 | --- | --- |
 | Cloud SQL (recommended on GCP) | Create Postgres 16. On GCE, run Cloud SQL Auth Proxy on `127.0.0.1:5432`. On Cloud Run, attach the instance and use a JDBC URL your team has verified, or keep using an existing hosted Postgres URL. |
-| Existing hosted Postgres | Set `SPRING_DATASOURCE_URL` / user / password (same as local `.env`). Flyway runs on startup. |
+| Existing hosted Postgres | Set `SPRING_DATASOURCE_URL` as `postgresql://postgres:{{password}}@db.<ref>.supabase.co:5432/postgres`. Do not convert env files to `jdbc:`. |
 
 Never bake passwords into the image. Use Secret Manager or the VM/Cloud Run env (encrypted).
 
@@ -82,17 +82,20 @@ Placeholder env: `infrastructure/gcp/env.example`.
 
 ## 4. Deploy Cloud Run
 
+`--set-env-vars` splits on commas, so CORS values like `https://*.run.app` must go in a file:
+
 ```bash
+# Edit HOST in infrastructure/gcp/cloud-run-env.yaml first.
 gcloud run deploy alphalens \
   --project=alphalens-508509 \
-  --image=asia-south1-docker.pkg.dev/alphalens-508509/alphalens/alphalens:latest \
   --region=asia-south1 \
+  --image=asia-south1-docker.pkg.dev/alphalens-508509/alphalens/alphalens:latest \
   --port=8080 \
   --memory=1Gi \
   --cpu=2 \
-  --set-env-vars="SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:5432/alphalens,SPRING_DATASOURCE_USERNAME=alphalens" \
-  --set-secrets=SPRING_DATASOURCE_PASSWORD=alphalens-db-password:latest \
-  --allow-unauthenticated
+  --allow-unauthenticated \
+  --env-vars-file=infrastructure/gcp/cloud-run-env.yaml \
+  --set-secrets=SPRING_DATASOURCE_PASSWORD=SPRING_DATASOURCE_PASSWORD:latest
 ```
 
 Or `gcloud run services replace infrastructure/gcp/cloud-run.yaml --region=asia-south1 --project=alphalens-508509`.

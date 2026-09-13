@@ -18,6 +18,17 @@ fi
 FIREBASE_PROJECT="${FIREBASE_PROJECT:-alphalens-a3cce}"
 
 cd "${ROOT}/frontend"
+if [[ -f .env ]]; then
+  # shellcheck disable=SC1091
+  set -a
+  source .env
+  set +a
+fi
+if [[ "${VITE_API_BASE_URL:-}" == https://* && "${VITE_API_BASE_URL}" != */api ]]; then
+  echo "VITE_API_BASE_URL must end with /api so the browser calls /api/instruments, not /instruments." >&2
+  echo "Example: VITE_API_BASE_URL=https://alphalens-113523778150.asia-south1.run.app/api" >&2
+  exit 1
+fi
 npm run build
 firebase deploy --only hosting --project "${FIREBASE_PROJECT}"
 cd ..

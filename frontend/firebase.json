@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "alphalens-a3cce",
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [
@@ -11,6 +12,13 @@
             "value": "no-cache"
           }
         ]
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/home",
+        "type": 302
       }
     ],
     "rewrites": [

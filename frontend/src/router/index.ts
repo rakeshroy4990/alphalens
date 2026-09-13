@@ -14,8 +14,8 @@ export const router = createRouter({
       path: '/',
       component: AppLayout,
       children: [
-        { path: '', name: 'home', component: HomeView },
-        { path: 'home', name: 'home-path', component: HomeView },
+        { path: '', redirect: '/home' },
+        { path: 'home', name: 'home', component: HomeView },
         { path: 'stocks/:instrumentId', name: 'stock', component: StockView },
         { path: 'screener', name: 'screener', component: ScreenerView },
         { path: 'watchlists', name: 'watchlists', component: WatchlistView },
