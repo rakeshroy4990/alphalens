@@ -1,0 +1,13 @@
+.git
+**/.DS_Store
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+frontend/dist
+backend/.gradle
+backend/build
+backend/.env
+**/*.log
+**/.idea
+**/.vscode

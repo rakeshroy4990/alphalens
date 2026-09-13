@@ -1,0 +1,40 @@
+# Local smoke-test of the Google Cloud image.
+#   docker-compose -f infrastructure/docker-compose.cloud.yml up --build
+#
+# App: http://127.0.0.1:8080
+# Uses a separate Compose project so it does not replace local alphalens-postgres.
+
+name: alphalens-cloud
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alphalens-cloud-postgres
+    environment:
+      POSTGRES_DB: alphalens
+      POSTGRES_USER: alphalens
+      POSTGRES_PASSWORD: alphalens
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alphalens -d alphalens"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  alphalens:
+    build:
+      context: ..
+      dockerfile: infrastructure/gcp/Dockerfile
+    image: alphalens:latest
+    container_name: alphalens-cloud
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      BACKEND_PORT: "8088"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/alphalens
+      SPRING_DATASOURCE_USERNAME: alphalens
+      SPRING_DATASOURCE_PASSWORD: alphalens
+      APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:*,http://127.0.0.1:*
+    depends_on:
+      postgres:
+        condition: service_healthy

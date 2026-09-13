@@ -1,0 +1,74 @@
+---
+description: AlphaLens master architecture, stack, phase protocol, and definition of done
+alwaysApply: true
+---
+
+# AlphaLens — Master Development Rule
+
+You are the lead architect building a production-grade Indian stock intelligence platform (Tickertape alternative). Build incrementally. Never implement the entire application in one step.
+
+Full text: `docs/master-development-rule.md`. Identify the current phase before any change. Never skip phases. Never start the next major phase automatically.
+
+## Stack (do not change without a strong technical reason)
+
+- Frontend: Vue 3, TypeScript, Vite, Pinia, Vue Router, Tailwind CSS, TradingView Lightweight Charts
+- Backend: Java, Spring Boot, Spring Security, REST, Gradle
+- Data: PostgreSQL, TimescaleDB (market time-series), Redis
+- AI: OpenAI via backend only
+- Storage: S3-compatible object storage
+- Auth (initial): email/password + Google OAuth
+- Broker (initial): Zerodha Kite Connect — integration only, not the market-data architecture
+
+Match saas-builder-project conventions: Controller → Service → Repository; no business logic in Vue components or controllers; no raw Axios in components; secrets never in the frontend.
+
+## Architecture (keep concerns separated)
+
+```text
+DATA SOURCES → INGESTION → NORMALIZATION → PostgreSQL + TimescaleDB
+  → REDIS → DOMAIN SERVICES (Chart / Algo / Portfolio) → REST API → Vue
+```
+
+Kite is a broker adapter. Do not design market data around Kite.
+
+## Product differentiation
+
+```text
+DATA + ANALYTICS + ALGORITHMS + EXPLANATION
+```
+
+Answer: "Why is this stock attractive or unattractive?" and "What changed?"
+
+LLMs must not calculate financial metrics. Calculations are deterministic. AI may only explain calculated results.
+
+## Philosophy
+
+1. One phase at a time. Never implement future phases early.
+2. Every phase must compile and have tests. Every API must validate input.
+3. No business logic in Vue components. No credentials/secrets in the frontend.
+4. Never hard-code market data or stock-specific algorithms into controllers.
+5. Prefer configuration-driven algorithms. Wrap third parties behind interfaces.
+6. Write docs as the project evolves. Do not add unnecessary dependencies.
+
+## Cursor execution protocol
+
+When implementing a feature:
+
+1. Inspect relevant files first.
+2. Explain: current state, files affected, plan, dependencies, risks.
+3. Implement the smallest correct change.
+4. Run relevant tests. Fix failures before continuing.
+5. Verify compile, tests, API, migrations, frontend build as applicable.
+6. Update docs if architecture changed.
+7. Report: Implemented / Files changed / Tests / Known limitations / Next phase.
+
+## Definition of done
+
+A phase is DONE only when: code exists and compiles; tests pass; API contracts documented; migrations work; no secrets committed; error handling exists; README/docs updated; existing functionality still works; acceptance criteria verified.
+
+## Strict phase rule
+
+If the current phase is N, finish N, report completion, recommend N+1, and **stop**. Wait for the next instruction.
+
+## Current starting task
+
+Current phase: **PHASE 27 COMPLETE** (provider selection docs only; runtime stays MOCK). Next: **PHASE 28 — Market Data Provider Integration** only after a written commercial display/storage license is recorded in `docs/data-licensing.md`.

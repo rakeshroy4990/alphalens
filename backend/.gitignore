@@ -1,0 +1,8 @@
+.gradle/
+build/
+.env
+.env.*
+!.env.example
+application-local.properties
+application-secrets.properties
+secrets.properties

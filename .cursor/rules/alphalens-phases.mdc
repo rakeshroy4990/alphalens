@@ -1,0 +1,80 @@
+---
+description: AlphaLens sequential phase list — implement only the current authorized phase
+alwaysApply: true
+---
+
+# AlphaLens — Phases
+
+Execute sequentially. Never skip. Never implement multiple major phases automatically.
+
+| Phase | Name | One-line gate |
+| --- | --- | --- |
+| 0 | Project Audit | `docs/project-audit.md` written; no architecture changes |
+| 1 | Repository Foundation | `/frontend` `/backend` `/docs` `/infrastructure` `/scripts` run; health works |
+| 2 | Database Foundation | Flyway: users, instruments, exchanges, sectors, industries |
+| 3 | Instrument Master | Search, pagination, no duplicate instruments |
+| 4 | Market Data Abstraction | `MarketDataProvider` mock; Quote/Candle/Timeframe |
+| 5 | TimescaleDB | OHLCV hypertable + efficient range queries |
+| 6 | Chart API | `GET /api/instruments/{id}/candles` validated |
+| 7 | Frontend Chart | `StockChart.vue` from backend data only; no indicators |
+| 8 | Technical Indicators | SMA EMA RSI MACD VWAP Bollinger; backend + tests |
+| 9 | Fundamental Data | Normalized statements + derived metrics via backend |
+| 10 | Fundamental Analytics | CAGRs, margins, trends; no misleading silent values |
+| 11 | Valuation Engine | PE/PB/EV/EBITDA/PEG/DCF; assumptions visible |
+| 12 | Algo Engine | Configurable `StockAlgorithm`; no hard-coded picks |
+| 13 | Stock Score | Component scores + configurable weights 0–100 |
+| 14 | Stock Page | Header, price, chart, score, fundamentals, valuation, risk |
+| 15 | Watchlist | Multiple lists; add/remove/reorder; list score |
+| 16 | Alerts | Price/score/valuation/technical/fundamental; notification port |
+| 17 | Coverage Request | User requests + admin demand queue |
+| 18 | User Algorithms | Controlled JSON/DSL rules; no user code execution |
+| 19 | Screener | Filters + saved screens |
+| 20 | AI Explanation | Structured inputs only; AI does not calculate |
+| 21 | Portfolio without broker | CSV/Excel/manual; score, concentration, P&L |
+| 22 | Kite Integration | Login, holdings, positions, orders, trades; tokens server-side |
+| 23 | Broker Portfolio Sync | Scheduled/cached sync; no API hammering |
+| 24 | Trading | Confirm screen; never auto-trade from algo signals |
+| 25 | Backtesting | Bias controls; label simulated results |
+| 26 | Production Hardening | Security, performance, reliability |
+| 27 | Market Data Provider Selection | `docs/market-data-provider-decision.md`; no production adapter |
+| 28 | Market Data Provider Integration | Licensed adapter behind `MarketDataProvider` only |
+| 29 | Historical Data Import | Controlled job; small universe first |
+| 30 | Historical Data Validation | `DataQualityService`; no silent bad data |
+| 31 | Corporate Actions & Adjustments | Raw + adjusted; never destroy raw |
+| 32 | Real-Time Market Data Pipeline | Vendor WS → our Redis/Timescale → our WS |
+| 33 | Real-Time Frontend Streaming | Chart updates; LIVE only if fresh |
+| 34 | Algo Research Dataset | Not against production HTTP |
+| 35 | Backtesting Engine | No look-ahead; costs + slippage |
+| 36 | Walk-Forward Validation | Label backtest vs out-of-sample |
+| 37 | Production Algo Engine | Deterministic signals; AI explains only |
+| 38 | Kite Developer/Broker Setup | `docs/kite-integration.md` before code |
+| 39 | Kite Authentication | Tokens server-side, encrypted |
+| 40 | Kite Portfolio Integration | Read-only first; map to `instrumentId` |
+| 41 | Real-Time Portfolio | Our quotes + broker holdings |
+| 42 | Kite Order Integration | Confirm screen; no silent algo orders |
+| 43 | Paper Trading | Mandatory before live algo execution |
+| 44 | Algo + User-Confirmed Trading | User presses BUY; no auto-trade |
+| 45 | Monitoring & Observability | Data freshness + vendor health |
+| 46 | Security & Production Hardening | Tokens, OWASP, backups |
+| 47 | Billing / Subscription | `BillingProvider` — do not hard-code Razorpay |
+| 48 | Production Launch | Limited 100–300 name universe |
+
+## Phase 1 layout (only when authorized)
+
+Backend packages: `controller` `service` `repository` `domain` `dto` `mapper` `config` `exception` `integration`
+
+Frontend: `components` `views` `stores` `services` `router` `types` `composables` `layouts`
+
+Also: `.env.example`, `.gitignore`, Docker, README, local dev instructions.
+
+## Acceptance reminders
+
+- Phase 4: do not connect a production market-data provider unless licensing is documented in `docs/data-licensing.md`.
+- Phase 7: do not implement indicators.
+- Phase 20: do not integrate OpenAI earlier.
+- Phase 22: only after portfolio analytics works.
+- Phase 24: only after broker sync is stable.
+
+After finishing a phase, report `PHASE N COMPLETE` and the next recommended phase, then wait.
+
+Phase 27–48: licensing and vendor adapters. Never implement a production market-data vendor until `docs/data-licensing.md` names a signed contract. Never use Kite as the market-data source.

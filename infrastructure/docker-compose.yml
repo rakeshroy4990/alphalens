@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alphalens-postgres
+    environment:
+      POSTGRES_DB: alphalens
+      POSTGRES_USER: alphalens
+      POSTGRES_PASSWORD: alphalens
+    ports:
+      - "5432:5432"
+    volumes:
+      - alphalens_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alphalens -d alphalens"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  alphalens_pg:

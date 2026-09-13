@@ -1,0 +1,77 @@
+---
+description: AlphaLens third-party adapters, market-data licensing, broker, charts, and AI rules
+alwaysApply: true
+---
+
+# AlphaLens — Integrations
+
+Every external service is behind an internal interface. Controllers never call third-party APIs directly.
+
+Registry: `docs/integrations.md`. Market-data vendor decision: `docs/market-data-provider-decision.md`. Do not implement a production market-data adapter until `docs/data-licensing.md` names a signed commercial display/storage contract.
+
+## Required provider interfaces
+
+```text
+MarketDataProvider → ProviderA, ProviderB (start with mock)
+NewsProvider
+AIProvider
+BrokerProvider
+NotificationProvider
+```
+
+Example:
+
+```java
+public interface MarketDataProvider {
+    StockQuote getQuote(String instrumentId);
+    List<Candle> getHistoricalData(
+        String instrumentId, Timeframe timeframe, LocalDate from, LocalDate to);
+}
+
+public interface BrokerProvider {
+    AccountInfo getAccount();
+    List<Holding> getHoldings();
+    List<Position> getPositions();
+    OrderResult placeOrder(OrderRequest request);
+    OrderResult modifyOrder(OrderRequest request);
+    OrderResult cancelOrder(String orderId);
+}
+```
+
+Initial broker implementation: `KiteBrokerProvider`. Future: Upstox, Dhan, Angel, FYERS. Zerodha-specific types must not leak into the core domain.
+
+## Market data licensing
+
+Never assume a broker API can legally be used as the commercial market-data source.
+
+Before production redistribution: identify the provider; verify licensing, redistribution, and commercial use; document in `docs/data-licensing.md`.
+
+If licensing is unclear: **stop** production market-data implementation and use a mock provider.
+
+Never hard-code market data. Chart data comes from our backend. The frontend must not call the external market-data provider.
+
+## Charting (when Phase 7 is authorized)
+
+TradingView Lightweight Charts. Support candlestick, line, area, volume, crosshair, zoom, pan, multiple timeframes.
+
+Initial timeframes: `1D 1W 1M 6M 1Y 5Y MAX`.
+
+Initial indicators (Phase 8 only): SMA, EMA, RSI, MACD, VWAP, Bollinger Bands. Do not implement 30+ indicators initially.
+
+## AI (Phase 20 only)
+
+`AIProvider` receives structured calculated data and explains it. AI must not calculate PE, CAGR, ROCE, DCF, returns, or portfolio allocation.
+
+OpenAI is called from the backend only. Never put API keys in Vue.
+
+## Secrets
+
+Never put Kite `api_secret` or `access_token` in frontend code. Keep broker tokens server-side and encrypted. Never expose database credentials to the frontend.
+
+## Notifications
+
+Use a notification abstraction. Do not hard-code email-provider logic into business services.
+
+## Trading safety (Phase 24 only)
+
+Always show a confirmation screen. Never place an order solely because an algorithm generated a signal. Require explicit user confirmation unless a separately reviewed automated-trading feature is intentionally introduced.

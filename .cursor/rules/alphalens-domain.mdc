@@ -1,0 +1,57 @@
+---
+description: AlphaLens instrument model, financial integrity, testing, UI, and regulatory rules
+alwaysApply: true
+---
+
+# AlphaLens — Domain, Integrity, UI
+
+## Canonical instrument
+
+Never use NSE symbol as the primary identifier. Use internal `instrumentId` everywhere.
+
+```text
+Instrument: id, isin, nseSymbol, bseSymbol, companyName, shortName,
+            sector, industry, exchange, status, createdAt, updatedAt
+```
+
+## Financial data integrity
+
+Financial calculations must be deterministic and unit-tested with known expected values.
+
+Never: fabricate market data; silently interpolate missing financials; calculate using future data; mix quarterly and annual periods incorrectly; ignore splits, bonuses, dividends where relevant, or symbol changes.
+
+Imported financial data must carry: `source`, `source_timestamp`, `period`, `reported_date`, `currency`, `unit`.
+
+Handle nulls, negatives, zero denominators, missing periods, and corporate actions. Do not silently generate misleading values.
+
+Valuation (when authorized): PE, PB, EV/EBITDA, PEG, historical PE percentile, sector comparison, DCF. DCF assumptions (growth, terminal growth, discount rate, FCF, shares, net debt) must never be hidden from users.
+
+Algo engine (when authorized): configuration-driven rules, not hard-coded stock recommendations. Return `score`, `factors`, `passedRules`, `failedRules`, `explanationData`. User algorithms use a controlled rule DSL/JSON — no arbitrary code execution.
+
+Stock scores (when authorized): Growth, Quality, Financial, Valuation, Momentum, Risk — overall 0–100 with configurable weights. Never hide component scores.
+
+## Testing
+
+Every feature needs tests. Backend: unit, integration, repository, API. Frontend: component, store, API. Never mark a phase complete if tests are failing.
+
+## UI principles
+
+Feel: Bloomberg simplicity + Tickertape accessibility + modern SaaS. Avoid clutter.
+
+Stock page priority: Price → Chart → Score → Why → Fundamentals → Valuation → Risks → News.
+
+Use consistent terminology. Business logic lives in services/composables/stores, not Vue templates.
+
+## Regulatory / product safety
+
+Position as research, analytics, screening, portfolio analytics, and educational information.
+
+Do not casually present algorithmic output as guaranteed investment advice.
+
+Personalized investment advice, automated trading, or trade recommendations must be reviewed for applicable Indian securities regulations before production release.
+
+Clearly label simulated/historical backtest results. Never present backtests as guaranteed future performance.
+
+## Dependency rule
+
+Before adding a package: is it necessary, already covered, maintained, commercially licensed, and not increasing lock-in? Prefer a simpler implementation.

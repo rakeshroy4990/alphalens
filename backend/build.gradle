@@ -1,0 +1,105 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.alphalens'
+version = '0.0.1-SNAPSHOT'
+description = 'AlphaLens backend'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+    enabled = false
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    runtimeOnly 'org.postgresql:postgresql'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testImplementation 'org.testcontainers:postgresql:1.21.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'org.testcontainers') {
+            details.useVersion '1.21.4'
+        }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    def colimaSock = "${System.getProperty('user.home')}/.colima/default/docker.sock"
+    if (System.getenv('DOCKER_HOST')) {
+        environment 'DOCKER_HOST', System.getenv('DOCKER_HOST')
+    } else if (file(colimaSock).exists()) {
+        environment 'DOCKER_HOST', "unix://${colimaSock}"
+    }
+}
+
+/** Load KEY=value pairs from .env (comments, blank lines, optional export prefix). */
+def loadDotEnv(File envFile) {
+    if (!envFile.exists()) {
+        return [:]
+    }
+    Map<String, String> out = new LinkedHashMap<>()
+    envFile.eachLine { String raw ->
+        String line = raw.trim()
+        if (line.isEmpty() || line.startsWith('#')) {
+            return
+        }
+        if (line.startsWith('export ')) {
+            line = line.substring(7).trim()
+        }
+        int i = line.indexOf('=')
+        if (i < 1) {
+            return
+        }
+        String key = line.substring(0, i).trim()
+        if (key.isEmpty()) {
+            return
+        }
+        String val = line.substring(i + 1).trim()
+        if (val.length() >= 2
+                && ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'")))) {
+            val = val.substring(1, val.length() - 1)
+        }
+        out.put(key, val)
+    }
+    return out
+}
+
+tasks.named('bootRun', org.springframework.boot.gradle.tasks.run.BootRun) { bootRun ->
+    Map<String, Object> env = new LinkedHashMap<>(System.getenv())
+    loadDotEnv(file("${project.projectDir}/.env")).each { String k, String v ->
+        env.put(k, v)
+    }
+    String remoteUrl = env.getOrDefault('SPRING_DATASOURCE_URL', '').toString()
+    boolean forceSupabase = env.getOrDefault('USE_SUPABASE', '0').toString() == '1'
+    if (!forceSupabase && remoteUrl.contains('supabase.com')) {
+        logger.lifecycle('Ignoring Supabase URL (set USE_SUPABASE=1 to use it). Using local PostgreSQL.')
+        env.put('SPRING_DATASOURCE_URL', 'jdbc:postgresql://localhost:5432/alphalens')
+        env.put('SPRING_DATASOURCE_USERNAME', 'alphalens')
+        env.put('SPRING_DATASOURCE_PASSWORD', 'alphalens')
+    }
+    bootRun.environment = env
+}
