@@ -3,11 +3,14 @@
 # Market data remains MOCK until a signed license exists.
 
 FROM eclipse-temurin:17-jdk-jammy AS backend-build
-WORKDIR /src
-COPY backend/gradlew backend/gradlew.bat backend/build.gradle backend/settings.gradle backend/gradle.properties ./
-COPY backend/gradle ./gradle
-RUN chmod +x gradlew
-COPY backend/src ./src
+# Keep repo layout so includeBuild('../backend-auth-lib') in backend/settings.gradle resolves.
+WORKDIR /workspace
+COPY backend/gradlew backend/gradlew.bat backend/build.gradle backend/settings.gradle backend/gradle.properties ./backend/
+COPY backend/gradle ./backend/gradle
+COPY backend-auth-lib ./backend-auth-lib
+RUN chmod +x backend/gradlew
+COPY backend/src ./backend/src
+WORKDIR /workspace/backend
 RUN ./gradlew bootJar -x test --no-daemon
 
 FROM node:22-alpine AS frontend-build
@@ -28,7 +31,7 @@ RUN apt-get update \
 
 COPY infrastructure/gcp/nginx.conf.template /etc/nginx/alphalens.conf.template
 COPY infrastructure/gcp/entrypoint.sh /entrypoint.sh
-COPY --from=backend-build /src/build/libs/*.jar /app/backend.jar
+COPY --from=backend-build /workspace/backend/build/libs/*.jar /app/backend.jar
 COPY --from=frontend-build /src/dist /usr/share/nginx/html
 
 RUN chmod +x /entrypoint.sh

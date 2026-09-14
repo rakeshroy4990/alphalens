@@ -9,6 +9,8 @@ frontend/dist
 backend/.gradle
 backend/build
 backend/.env
+backend-auth-lib/.gradle
+backend-auth-lib/build
 **/*.log
 **/.idea
 **/.vscode

@@ -13,6 +13,8 @@ frontend/coverage
 backend/.gradle
 backend/build
 backend/.env
+backend-auth-lib/.gradle
+backend-auth-lib/build
 backend/.env.*
 !backend/.env.example
 
