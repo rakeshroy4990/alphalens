@@ -19,12 +19,18 @@ http {
         ''      close;
     }
 
+    # Credentialed CORS cannot use Allow-Headers: *. Echo the preflight list.
     map $http_origin $cors_origin {
         default "";
-        "~^https://alphalens-a3cce\.(web\.app|firebaseapp\.com)$" $http_origin;
-        "~^https://.*\.run\.app$" $http_origin;
-        "~^https://alphalens-[a-z0-9-]+\.asia-south1\.run\.app$" $http_origin;
+        "~^https://alphalens-a3cce(--[a-z0-9.-]+)?\.(web\.app|firebaseapp\.com)$" $http_origin;
+        "~^https://[a-z0-9.-]+\.(web\.app|firebaseapp\.com)$" $http_origin;
+        "~^https://[a-z0-9.-]+\.run\.app$" $http_origin;
         "~^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$" $http_origin;
+    }
+
+    map $http_access_control_request_headers $cors_allow_headers {
+        default $http_access_control_request_headers;
+        ""      "Content-Type, Authorization";
     }
 
     server {
@@ -37,12 +43,15 @@ http {
         index        index.html;
 
         location /api/ {
+            # Preflight stays here so Java need not be warm. Never send Allow-Headers: *
+            # with credentials (Firebase Hosting → Cloud Run cookies).
             if ($request_method = OPTIONS) {
                 add_header Access-Control-Allow-Origin $cors_origin always;
                 add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-                add_header Access-Control-Allow-Headers "*" always;
+                add_header Access-Control-Allow-Headers $cors_allow_headers always;
                 add_header Access-Control-Allow-Credentials "true" always;
                 add_header Access-Control-Max-Age 3600 always;
+                add_header Vary Origin always;
                 add_header Content-Length 0;
                 return 204;
             }
@@ -63,9 +72,10 @@ http {
             if ($request_method = OPTIONS) {
                 add_header Access-Control-Allow-Origin $cors_origin always;
                 add_header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS" always;
-                add_header Access-Control-Allow-Headers "*" always;
+                add_header Access-Control-Allow-Headers $cors_allow_headers always;
                 add_header Access-Control-Allow-Credentials "true" always;
                 add_header Access-Control-Max-Age 3600 always;
+                add_header Vary Origin always;
                 add_header Content-Length 0;
                 return 204;
             }

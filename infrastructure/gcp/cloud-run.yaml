@@ -40,8 +40,10 @@ spec:
             - name: SPRING_DATASOURCE_MAX_POOL_SIZE
               value: "5"
             - name: APP_CORS_ALLOWED_ORIGIN_PATTERNS
-              value: https://*.run.app,http://localhost:*
+              value: https://alphalens-a3cce.web.app,https://alphalens-a3cce.firebaseapp.com,https://*.web.app,https://*.firebaseapp.com,https://*.run.app
             - name: APP_AUTH_COOKIE_SECURE
+              value: "true"
+            - name: APP_AUTH_COOKIE_CROSS_SITE_DEPLOYMENT
               value: "true"
           startupProbe:
             httpGet:
