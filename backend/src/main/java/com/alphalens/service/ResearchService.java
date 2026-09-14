@@ -118,26 +118,51 @@ public class ResearchService {
     }
 
     public FundamentalAnalyticsService.AnalyticsBundle analytics(long instrumentId) {
-        return FundamentalAnalyticsService.analyze(fundamentals(instrumentId));
+        instrumentService.require(instrumentId);
+        return metricsForListedInstrument(instrumentId).analytics();
     }
 
     public ValuationService.ValuationBundle valuation(long instrumentId) {
-        FinancialSnapshot snapshot = fundamentals(instrumentId);
-        Quote quote = marketDataProvider.quote(instrumentId);
-        return ValuationService.value(quote, snapshot, defaultAssumptions(snapshot));
+        instrumentService.require(instrumentId);
+        return metricsForListedInstrument(instrumentId).valuation();
     }
 
     public AlgorithmResult evaluateDefault(long instrumentId) {
-        return DEFAULT_ALGO.evaluate(context(instrumentId, analytics(instrumentId), valuation(instrumentId)));
+        instrumentService.require(instrumentId);
+        var metrics = metricsForListedInstrument(instrumentId);
+        return DEFAULT_ALGO.evaluate(context(instrumentId, metrics.analytics(), metrics.valuation()));
     }
 
     public AlgorithmResult evaluate(long instrumentId, ConfigurableRuleAlgorithm algorithm) {
-        return algorithm.evaluate(context(instrumentId, analytics(instrumentId), valuation(instrumentId)));
+        instrumentService.require(instrumentId);
+        var metrics = metricsForListedInstrument(instrumentId);
+        return algorithm.evaluate(context(instrumentId, metrics.analytics(), metrics.valuation()));
     }
 
     public StockScoreService.ScoreBundle score(long instrumentId) {
-        QuoteResponse quote = marketDataService.quote(instrumentId);
-        return StockScoreService.score(analytics(instrumentId), valuation(instrumentId), quote.changePercent(), null);
+        instrumentService.require(instrumentId);
+        return metricsForListedInstrument(instrumentId).score();
+    }
+
+    /**
+     * Analytics, valuation, and score from one snapshot and one quote.
+     * Does not reload the instrument — caller must already know the id exists
+     * (for example after {@link InstrumentService#list}).
+     */
+    public DerivedMetrics metricsForListedInstrument(long instrumentId) {
+        FinancialSnapshot snapshot = fundamentalCatalog.snapshot(instrumentId);
+        Quote quote = marketDataProvider.quote(instrumentId);
+        FundamentalAnalyticsService.AnalyticsBundle analytics = FundamentalAnalyticsService.analyze(snapshot);
+        ValuationService.ValuationBundle valuation = ValuationService.value(quote, snapshot, defaultAssumptions(snapshot));
+        StockScoreService.ScoreBundle score = StockScoreService.score(analytics, valuation, quote.changePercent(), null);
+        return new DerivedMetrics(analytics, valuation, score);
+    }
+
+    public record DerivedMetrics(
+            FundamentalAnalyticsService.AnalyticsBundle analytics,
+            ValuationService.ValuationBundle valuation,
+            StockScoreService.ScoreBundle score
+    ) {
     }
 
     public StockContext context(

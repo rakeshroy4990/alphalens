@@ -12,7 +12,7 @@ Execute sequentially. Never skip. Never implement multiple major phases automati
 | 0 | Project Audit | `docs/project-audit.md` written; no architecture changes |
 | 1 | Repository Foundation | `/frontend` `/backend` `/docs` `/infrastructure` `/scripts` run; health works |
 | 2 | Database Foundation | Flyway: users, instruments, exchanges, sectors, industries |
-| 3 | Instrument Master | Search, pagination, no duplicate instruments |
+| 3 | Stock Information & Identification | Search, pagination, no duplicate stock records |
 | 4 | Market Data Abstraction | `MarketDataProvider` mock; Quote/Candle/Timeframe |
 | 5 | TimescaleDB | OHLCV hypertable + efficient range queries |
 | 6 | Chart API | `GET /api/instruments/{id}/candles` validated |

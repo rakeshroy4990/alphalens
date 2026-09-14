@@ -24,11 +24,18 @@ if [[ -f .env ]]; then
   source .env
   set +a
 fi
-if [[ "${VITE_API_BASE_URL:-}" == https://* && "${VITE_API_BASE_URL}" != */api ]]; then
+# Firebase has no /api proxy. /api is only valid for local Vite and the
+# Cloud Run nginx image. A leftover start-dev export must not ship.
+if [[ "${VITE_API_BASE_URL:-}" != https://* ]]; then
+  echo "Firebase deploys need an absolute Cloud Run API URL, not '${VITE_API_BASE_URL:-}'." >&2
+  echo "Set VITE_API_BASE_URL=https://alphalens-113523778150.asia-south1.run.app/api" >&2
+  exit 1
+fi
+if [[ "${VITE_API_BASE_URL}" != */api ]]; then
   echo "VITE_API_BASE_URL must end with /api so the browser calls /api/instruments, not /instruments." >&2
   echo "Example: VITE_API_BASE_URL=https://alphalens-113523778150.asia-south1.run.app/api" >&2
   exit 1
 fi
-npm run build
+npm run build -- --mode production
 firebase deploy --only hosting --project "${FIREBASE_PROJECT}"
 cd ..

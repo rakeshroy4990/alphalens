@@ -1,6 +1,6 @@
 package com.alphalens.controller;
 
-import com.alphalens.identity.DemoUsers;
+import com.alphalens.auth.CurrentUser;
 import com.alphalens.service.AiExplanationService;
 import com.alphalens.service.backtest.BacktestService;
 import com.alphalens.service.broker.BrokerService;
@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,16 +48,14 @@ public class ProductController {
     }
 
     @GetMapping("/portfolio")
-    public Map<String, Object> portfolio(@RequestHeader(value = "X-User-Id", required = false) String userHeader) {
-        return portfolioService.snapshot(user(userHeader));
+    public Map<String, Object> portfolio() {
+        return portfolioService.snapshot(user());
     }
 
     @PostMapping("/portfolio/holdings")
-    public Map<String, Object> addHolding(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> addHolding(@RequestBody Map<String, Object> body) {
         return portfolioService.addManual(
-                user(userHeader),
+                user(),
                 ((Number) body.get("instrumentId")).longValue(),
                 new BigDecimal(body.get("quantity").toString()),
                 new BigDecimal(body.get("averagePrice").toString())
@@ -66,10 +63,8 @@ public class ProductController {
     }
 
     @PostMapping("/portfolio/import")
-    public Map<String, Object> importHoldings(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, String> body) {
-        return portfolioService.importCsv(user(userHeader), body.get("csv"));
+    public Map<String, Object> importHoldings(@RequestBody Map<String, String> body) {
+        return portfolioService.importCsv(user(), body.get("csv"));
     }
 
     @GetMapping("/broker/login")
@@ -78,27 +73,21 @@ public class ProductController {
     }
 
     @PostMapping("/broker/connect")
-    public Map<String, Object> brokerConnect(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> brokerConnect(@RequestBody Map<String, Object> body) {
         boolean consent = Boolean.TRUE.equals(body.get("consent"));
-        return brokerService.connect(user(userHeader), consent);
+        return brokerService.connect(user(), consent);
     }
 
     @PostMapping("/broker/sync")
-    public Map<String, Object> brokerSync(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestParam(defaultValue = "false") boolean force) {
-        return brokerService.sync(user(userHeader), force);
+    public Map<String, Object> brokerSync(@RequestParam(defaultValue = "false") boolean force) {
+        return brokerService.sync(user(), force);
     }
 
     @PostMapping("/orders/preview")
-    public Map<String, Object> preview(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> preview(@RequestBody Map<String, Object> body) {
         BigDecimal price = body.get("price") == null ? null : new BigDecimal(body.get("price").toString());
         return tradingService.preview(
-                user(userHeader),
+                user(),
                 ((Number) body.get("instrumentId")).longValue(),
                 (String) body.get("side"),
                 new BigDecimal(body.get("quantity").toString()),
@@ -117,11 +106,9 @@ public class ProductController {
     }
 
     @PostMapping("/backtests")
-    public Map<String, Object> backtest(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> backtest(@RequestBody Map<String, Object> body) {
         return backtestService.run(
-                user(userHeader),
+                user(),
                 ((Number) body.get("algorithmId")).longValue(),
                 ((Number) body.get("instrumentId")).longValue(),
                 LocalDate.parse(body.get("from").toString()),
@@ -129,7 +116,7 @@ public class ProductController {
         );
     }
 
-    private UUID user(String header) {
-        return DemoUsers.resolve(header);
+    private UUID user() {
+        return CurrentUser.requireId();
     }
 }

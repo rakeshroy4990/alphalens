@@ -13,7 +13,7 @@ spec:
       annotations:
         autoscaling.knative.dev/minScale: "0"
         autoscaling.knative.dev/maxScale: "3"
-        run.googleapis.com/cpu-throttling: "true"
+        run.googleapis.com/cpu-throttling: "false"
         run.googleapis.com/startup-cpu-boost: "true"
     spec:
       containerConcurrency: 40
@@ -41,6 +41,8 @@ spec:
               value: "5"
             - name: APP_CORS_ALLOWED_ORIGIN_PATTERNS
               value: https://*.run.app,http://localhost:*
+            - name: APP_AUTH_COOKIE_SECURE
+              value: "true"
           startupProbe:
             httpGet:
               path: /api/health

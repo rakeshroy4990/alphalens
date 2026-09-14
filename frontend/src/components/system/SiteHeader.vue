@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { siteChrome, siteNav } from '../../configs/siteChrome';
+import { useAuthStore } from '../../stores/auth.store';
 
 const route = useRoute();
+const router = useRouter();
+const auth = useAuthStore();
 
 const activeId = computed(() => {
   if (route.path.startsWith('/stocks')) {
@@ -15,6 +18,13 @@ const activeId = computed(() => {
 
 function isActive(id: string) {
   return activeId.value === id;
+}
+
+async function signOut() {
+  await auth.logout();
+  if (route.meta.requiresAuth) {
+    await router.push({ path: '/home' });
+  }
 }
 </script>
 
@@ -47,11 +57,25 @@ function isActive(id: string) {
       </RouterLink>
     </nav>
 
-    <RouterLink
-      :to="siteChrome.headerCta.to"
-      class="hidden shrink-0 rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold whitespace-nowrap text-white hover:bg-sky-700 sm:inline-flex"
-    >
-      {{ siteChrome.headerCta.label }}
-    </RouterLink>
+    <div class="flex shrink-0 items-center gap-2">
+      <template v-if="auth.isAuthenticated">
+        <span class="hidden max-w-[10rem] truncate text-sm text-slate-600 sm:inline">{{ auth.user?.displayName }}</span>
+        <button
+          class="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          type="button"
+          @click="signOut"
+        >
+          Log out
+        </button>
+      </template>
+      <button
+        v-else
+        class="rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold whitespace-nowrap text-white hover:bg-sky-700"
+        type="button"
+        @click="auth.openLogin()"
+      >
+        Sign in
+      </button>
+    </div>
   </header>
 </template>

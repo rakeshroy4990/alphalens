@@ -29,7 +29,7 @@ onMounted(() => {
     <p v-if="screener.loading" class="mt-6 text-sm text-slate-500">Loading matches…</p>
     <p v-else-if="screener.error" class="mt-6 text-sm text-rose-600">{{ screener.error }}</p>
     <p v-else-if="screener.ran && screener.rows.length === 0" class="mt-6 text-sm text-slate-500">
-      No instruments passed these filters.
+      No stocks passed these filters.
     </p>
     <ul v-else class="mt-6 divide-y divide-slate-200 rounded-xl border border-slate-200">
       <li v-for="row in screener.rows" :key="row.instrument.instrumentId">

@@ -7,7 +7,7 @@ The following phases are COMPLETE:
 - Project audit
 - Repository foundation
 - Database foundation
-- Instrument master
+- Stock Information & Identification
 - Market-data abstraction
 - TimescaleDB foundation
 - Chart API
@@ -404,7 +404,7 @@ Required services:
 ```text
 QuoteService
 HistoricalDataService
-InstrumentMappingService
+InstrumentMappingService   # vendor symbol → AlphaLens stock identification (`instrumentId`)
 MarketStatusService
 ```
 
@@ -470,7 +470,7 @@ Track:
 
 ```text
 job_id
-instrument
+instrument   # stock identification id
 timeframe
 from
 to
@@ -872,13 +872,13 @@ Trades
 Account information where permitted
 ```
 
-Map Kite instruments into your canonical:
+Map Kite listings into AlphaLens stock identification (Java `Instrument`):
 
 ```text
 Instrument
 ```
 
-Never use Kite's instrument identifier as your global instrument ID.
+Never use Kite's identifier as the AlphaLens stock id (`instrumentId`).
 
 ---
 

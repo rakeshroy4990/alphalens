@@ -20,7 +20,7 @@ export const useInstrumentStore = defineStore('instruments', {
         this.items = page.items;
       } catch {
         this.items = [];
-        this.error = 'Unable to load instruments.';
+        this.error = 'Unable to load stocks.';
       } finally {
         this.loading = false;
       }

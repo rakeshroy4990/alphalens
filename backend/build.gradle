@@ -22,10 +22,14 @@ repositories {
 }
 
 dependencies {
+    implementation 'com.alphalens:backend-auth-lib'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
     runtimeOnly 'org.postgresql:postgresql'
@@ -53,6 +57,7 @@ tasks.named('test') {
         environment 'DOCKER_HOST', System.getenv('DOCKER_HOST')
     } else if (file(colimaSock).exists()) {
         environment 'DOCKER_HOST', "unix://${colimaSock}"
+        environment 'TESTCONTAINERS_RYUK_DISABLED', 'true'
     }
 }
 
@@ -93,13 +98,7 @@ tasks.named('bootRun', org.springframework.boot.gradle.tasks.run.BootRun) { boot
     loadDotEnv(file("${project.projectDir}/.env")).each { String k, String v ->
         env.put(k, v)
     }
-    String remoteUrl = env.getOrDefault('SPRING_DATASOURCE_URL', '').toString()
-    boolean forceSupabase = env.getOrDefault('USE_SUPABASE', '0').toString() == '1'
-    if (!forceSupabase && remoteUrl.contains('supabase.com')) {
-        logger.lifecycle('Ignoring Supabase URL (set USE_SUPABASE=1 to use it). Using local PostgreSQL.')
-        env.put('SPRING_DATASOURCE_URL', 'jdbc:postgresql://localhost:5432/alphalens')
-        env.put('SPRING_DATASOURCE_USERNAME', 'alphalens')
-        env.put('SPRING_DATASOURCE_PASSWORD', 'alphalens')
-    }
+    String datasourceUrl = env.getOrDefault('SPRING_DATASOURCE_URL', 'jdbc:postgresql://localhost:5432/alphalens').toString()
+    logger.lifecycle('bootRun PostgreSQL: ' + datasourceUrl.replaceAll('://[^/@]+@', '://***@'))
     bootRun.environment = env
 }

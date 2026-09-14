@@ -7,10 +7,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -72,5 +74,18 @@ class InstrumentApiIT {
                 id
         );
         assertThat(stored).isGreaterThan(0);
+    }
+
+    @Test
+    void screenerReturnsBundledMetricsForListedInstruments() throws Exception {
+        mockMvc.perform(post("/api/screener")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].instrument.instrumentId").exists())
+                .andExpect(jsonPath("$.items[0].analytics.roce").exists())
+                .andExpect(jsonPath("$.items[0].valuation.pe").exists())
+                .andExpect(jsonPath("$.items[0].score.overall").exists())
+                .andExpect(jsonPath("$.totalElements").value(3));
     }
 }

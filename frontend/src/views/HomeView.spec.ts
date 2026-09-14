@@ -10,7 +10,7 @@ vi.mock('../services/instrument.service', () => ({
 }));
 
 describe('HomeView', () => {
-  it('renders hero and instrument section without system status', async () => {
+  it('renders hero and stock information section without system status', async () => {
     setActivePinia(createPinia());
     const router = createRouter({
       history: createWebHistory(),
@@ -22,7 +22,7 @@ describe('HomeView', () => {
     });
 
     expect(wrapper.text()).toContain('See why a stock looks attractive or unattractive.');
-    expect(wrapper.text()).toContain('Instrument master');
+    expect(wrapper.text()).toContain('Stock information');
     expect(wrapper.text()).not.toContain('System status');
     expect(wrapper.text()).not.toContain('Checking API and database');
   });

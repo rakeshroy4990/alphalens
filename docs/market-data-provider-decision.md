@@ -45,7 +45,7 @@ Existing domain models already match Phase 28 needs:
 What is **not** on the interface yet (Phase 28+):
 
 - `subscribeQuotes` / WebSocket listener
-- instrument mapping (vendor symbol ↔ internal `instrumentId`)
+- stock identification mapping (vendor symbol ↔ internal `instrumentId`)
 - market-status
 - corporate-action feed
 - source / retrievedAt / dataVersion on persisted candles
@@ -247,7 +247,7 @@ Secrets stay server-side. Health: `GET /internal/integrations/market-data/health
 3. **Intraday history too short** for walk-forward research without an add-on or self-accumulation.
 4. **15-minute live bars** may be delayed-only at TrueData.
 5. **BSE coverage** on TrueData’s API knowledge-base notes lags the marketing site — confirm before buying.
-6. **Symbol mapping** — vendors use their own identifiers; canonical id remains AlphaLens `instrumentId` + ISIN.
+6. **Symbol mapping** — vendors use their own identifiers; stock identification remains AlphaLens `instrumentId` + ISIN.
 7. **Pricing unknown** — website-display + per-user exchange fees can dominate infra cost.
 8. **No Java first-party SDK** — we write our own adapter (correct, avoids lock-in).
 

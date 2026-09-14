@@ -6,7 +6,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [tailwindcss(), vue()],
   server: {
-    host: '127.0.0.1',
+    host: 'localhost',
     port: 5173,
     proxy: {
       '/api': {

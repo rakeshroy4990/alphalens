@@ -19,7 +19,7 @@ export const useStockStore = defineStore('stock', {
       } catch {
         this.page = null;
         this.candles = null;
-        this.error = 'Unable to load this instrument.';
+        this.error = 'Unable to load this stock.';
       } finally {
         this.loading = false;
       }

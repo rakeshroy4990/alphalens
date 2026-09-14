@@ -30,7 +30,7 @@ Product to describe: AlphaLens, a commercial Indian stock-research website/app. 
 13. Are **live 15-minute** bars allowed, or only delayed 15-minute as the public interval list states?
 14. Corporate Data API: which action types (SPLIT, BONUS, RIGHTS, DIVIDEND, MERGER, DEMERGER, SYMBOL_CHANGE, ISIN_CHANGE) and how are they keyed (ISIN vs symbol)?
 15. Raw vs split-adjusted series — can we request both?
-16. Instrument master / ISIN mapping API and change files?
+16. Stock identification / ISIN mapping API (vendor instrument master) and change files?
 17. Market-status / holiday calendar API?
 18. WebSocket connection limits, max concurrent symbols, reconnect rules, heartbeat?
 19. Sandbox that matches **display** entitlements (not only personal algo use)?

@@ -169,7 +169,7 @@ Everything in Phase 1 and beyond, including:
 * Vue + Vite app that can call the backend
 * `.gitignore`, `.env.example`, Docker Compose for local Postgres
 * README and local development instructions
-* Later phases: instrument master, mock market data, TimescaleDB, charts, analytics, algo engine, Kite, etc.
+* Later phases: stock information & identification, mock market data, TimescaleDB, charts, analytics, algo engine, Kite, etc.
 
 ---
 
@@ -201,7 +201,7 @@ Greenfield monorepo intended to follow saas-builder-project’s Vue + Spring Boo
 * PostgreSQL + migration tooling
 * TimescaleDB, Redis, S3 adapter
 * Authentication
-* Instrument model and APIs
+* Stock information & identification model and APIs (`Instrument` in Java)
 * Market-data provider (mock first)
 * Chart API and Lightweight Charts UI
 * Fundamentals, valuation, algo, scores

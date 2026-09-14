@@ -5,7 +5,6 @@ import com.alphalens.dto.response.PageResponse;
 import com.alphalens.exception.ConflictException;
 import com.alphalens.exception.InvalidRequestException;
 import com.alphalens.exception.ResourceNotFoundException;
-import com.alphalens.identity.DemoUsers;
 import com.alphalens.service.InstrumentService;
 import com.alphalens.service.ResearchService;
 import com.alphalens.service.score.StockScoreService;
@@ -331,9 +330,10 @@ public class WorkspaceService {
         var listed = instrumentService.list(0, 100);
         List<Map<String, Object>> matches = new ArrayList<>();
         for (var item : listed.items()) {
-            var analytics = researchService.analytics(item.instrumentId());
-            var valuation = researchService.valuation(item.instrumentId());
-            var score = researchService.score(item.instrumentId());
+            var metrics = researchService.metricsForListedInstrument(item.instrumentId());
+            var analytics = metrics.analytics();
+            var valuation = metrics.valuation();
+            var score = metrics.score();
             if (matchesFilter(filters, analytics.revenueCagr(), "revenueGrowth")
                     && matchesFilter(filters, analytics.epsCagr(), "epsGrowth")
                     && matchesFilter(filters, analytics.roce(), "roce")
@@ -390,10 +390,6 @@ public class WorkspaceService {
                 ),
                 userId
         );
-    }
-
-    public UUID userId(String header) {
-        return DemoUsers.resolve(header);
     }
 
     public ConfigurableRuleAlgorithm parseAlgorithm(String name, JsonNode definition) {

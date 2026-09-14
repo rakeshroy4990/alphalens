@@ -1,1 +1,3 @@
 rootProject.name = 'alphalens-backend'
+includeBuild('../backend-auth-lib')
+

@@ -147,6 +147,34 @@ Use this architecture:
 
 Keep these concerns separated.
 
+Use this product language everywhere except Java internals, SQL table names, and `/api/instruments` paths (those stay `Instrument` / `instrumentId` because that is the technical record):
+
+```text
+Stock Information
+    ↓
+Stock Identification
+    ↓
+Market Data
+    ↓
+Financial Data
+    ↓
+Valuation
+    ↓
+Algorithms
+    ↓
+Portfolio
+```
+
+- **Stock Information** — who the company is (name, sector, industry, listing status).
+- **Stock Identification** — one reliable record per exchange-listed stock (ISIN, NSE/BSE symbols, internal id). Java class: `Instrument`.
+- **Market Data** — prices, candles, volume.
+- **Financial Data** — statements and derived metrics.
+- **Valuation** — PE, PB, DCF and visible assumptions.
+- **Algorithms** — configurable rules and scores.
+- **Portfolio** — holdings, concentration, P&L.
+
+Do not say "instrument" in UI copy, README, or phase titles. Keep `Instrument` in Java where it is the entity name.
+
 ---
 
 # 4. Development Philosophy
@@ -343,11 +371,15 @@ Frontend must NOT call the external market-data provider directly.
 
 ---
 
-# 10. Stock Instrument Model
+# 10. Stock Information & Identification
+
+Goal: Create a single, reliable record for every stock in AlphaLens so the system knows exactly which company and exchange-listed stock each piece of data belongs to.
+
+This is especially important because the same company can have NSE/BSE listings, different symbols, ISINs, corporate actions, price data, financial data, and so on.
 
 Never use NSE symbol as the primary identifier.
 
-Create a canonical instrument:
+Stock identification fields (Java type `Instrument`):
 
 ```text
 Instrument
@@ -366,7 +398,7 @@ createdAt
 updatedAt
 ```
 
-Use the internal `instrumentId` everywhere internally.
+Use the internal `instrumentId` everywhere internally. In product language this is the stock's AlphaLens id, not a ticker.
 
 ---
 
@@ -501,9 +533,13 @@ Acceptance criteria:
 
 ---
 
-# PHASE 3 — Instrument Master
+# PHASE 3 — Stock Information & Identification
 
-Implement:
+Goal: Create a single, reliable record for every stock in AlphaLens so the system knows exactly which company and exchange-listed stock each piece of data belongs to.
+
+This is especially important because the same company can have NSE/BSE listings, different symbols, ISINs, corporate actions, price data, financial data, and so on.
+
+Implement (Java names stay `Instrument`):
 
 ```text
 InstrumentService
@@ -526,7 +562,7 @@ Implement search indexes.
 Acceptance criteria:
 
 - Search works.
-- Duplicate instruments are prevented.
+- Duplicate stock records are prevented.
 - NSE/BSE/ISIN mapping works.
 
 ---
@@ -1509,7 +1545,7 @@ Risks
 News
 ```
 
-Use consistent terminology throughout the application.
+Use consistent terminology throughout the application: Stock Information → Stock Identification → Market Data → Financial Data → Valuation → Algorithms → Portfolio. Never show "instrument" to users.
 
 ---
 

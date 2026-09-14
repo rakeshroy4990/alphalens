@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GlobalPopup from '../components/system/GlobalPopup.vue';
 import SiteFooter from '../components/system/SiteFooter.vue';
 import SiteHeader from '../components/system/SiteHeader.vue';
 </script>
@@ -12,5 +13,6 @@ import SiteHeader from '../components/system/SiteHeader.vue';
       </main>
       <SiteFooter />
     </div>
+    <GlobalPopup />
   </div>
 </template>

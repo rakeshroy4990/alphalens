@@ -13,6 +13,7 @@ start_postgres
 echo "Preparing ports..."
 describe_port_owner "$UI_PORT" "ui"
 describe_port_owner "$BACKEND_PORT" "backend"
+kill_stale_backend
 kill_port "$UI_PORT"
 kill_port "$BACKEND_PORT"
 
@@ -28,13 +29,16 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-start_frontend
 start_backend
+wait_for_http "http://127.0.0.1:$BACKEND_PORT/api/health" "Backend" 90 || true
+start_frontend
 
 echo ""
-echo "UI     : http://127.0.0.1:$UI_PORT"
+echo "UI     : http://localhost:$UI_PORT"
 echo "Server : http://127.0.0.1:$BACKEND_PORT"
 echo "Health : http://127.0.0.1:$BACKEND_PORT/api/health"
+echo "Browser API calls go to /api on the UI origin (Vite → local Spring)."
+echo "Database: SPRING_DATASOURCE_URL from backend/.env (same cloud DB as Cloud Run)."
 echo "Press Ctrl+C to stop all services."
 echo "Tip    : BACKEND_PORT=8090 UI_PORT=5174 $0"
 echo ""

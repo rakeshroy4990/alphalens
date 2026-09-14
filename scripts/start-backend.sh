@@ -11,6 +11,7 @@ start_postgres
 
 echo "Preparing backend port..."
 describe_port_owner "$BACKEND_PORT" "backend"
+kill_stale_backend
 kill_port "$BACKEND_PORT"
 
 cleanup() {
@@ -21,6 +22,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 start_backend
+wait_for_http "http://127.0.0.1:$BACKEND_PORT/api/health" "Backend" 90 || true
 
 echo ""
 echo "Server : http://127.0.0.1:$BACKEND_PORT"

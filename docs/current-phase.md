@@ -17,6 +17,6 @@ Preferred vendor (pending written license): **TrueData**. Runner-up: **Global Da
 
 Google Cloud packaging (not a product phase): all-in-one image in `infrastructure/gcp/Dockerfile`. See [gcp-deploy.md](gcp-deploy.md).
 
-Known limitations: live NSE/BSE data, OpenAI, and Kite sessions are not connected. Identity is a demo user (`X-User-Id` optional). Redis is not required locally.
+Known limitations: live NSE/BSE data, OpenAI, and Kite sessions are not connected. Redis is not required locally. Auth is first-party JWT + httpOnly cookies via a **login/register popup** (email/password and optional Google GIS access token). Production must set `APP_AUTH_JWT_SECRET`.
 
 This is research and education software, not investment advice.

@@ -27,10 +27,19 @@ async function add() {
     <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl">Portfolio</h1>
     <p class="mt-2 text-sm text-slate-600">Manual holdings only. Broker sync stays server-side and is not live.</p>
     <form class="mt-6 grid gap-3 md:grid-cols-4" @submit.prevent="add">
-      <input v-model="instrumentId" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-      <input v-model="quantity" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-      <input v-model="averagePrice" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
-      <button class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white" type="submit">Add</button>
+      <label class="text-sm text-slate-600">
+        Stock id
+        <input v-model="instrumentId" class="mt-1 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
+      </label>
+      <label class="text-sm text-slate-600">
+        Quantity
+        <input v-model="quantity" class="mt-1 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
+      </label>
+      <label class="text-sm text-slate-600">
+        Average price
+        <input v-model="averagePrice" class="mt-1 block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm" />
+      </label>
+      <button class="self-end rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white" type="submit">Add</button>
     </form>
     <dl v-if="snapshot" class="mt-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
       <div>

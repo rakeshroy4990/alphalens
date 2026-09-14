@@ -1,14 +1,16 @@
-# Build and push the AlphaLens Cloud image to Artifact Registry.
-# Prerequisites: Artifact Registry repo `alphalens` in $LOCATION.
+# Build, push, and roll Cloud Run. One command:
+#   gcloud builds submit --project=alphalens-508509 --config=cloudbuild.yaml
 #
-#   gcloud builds submit --project=alphalens-508509 --config=cloudbuild.yaml \
-#     --substitutions=_LOCATION=asia-south1,_REPOSITORY=alphalens,_IMAGE=alphalens
+# Cloud Build service account needs roles/run.admin and
+# roles/iam.serviceAccountUser on the Cloud Run runtime SA.
 
 substitutions:
   _LOCATION: asia-south1
+  _REGION: asia-south1
   _REPOSITORY: alphalens
   _IMAGE: alphalens
   _TAG: latest
+  _SERVICE: alphalens
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -25,6 +27,33 @@ steps:
       - --tag=${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${_TAG}
       - --tag=${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}
       - .
+
+  # images: is pushed after all steps, so push here before Cloud Run rolls.
+  - name: gcr.io/cloud-builders/docker
+    id: push-latest
+    args:
+      - push
+      - ${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${_TAG}
+  - name: gcr.io/cloud-builders/docker
+    id: push-build
+    args:
+      - push
+      - ${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --project=${PROJECT_ID}
+      - --region=${_REGION}
+      - --image=${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${BUILD_ID}
+      - --no-cpu-throttling
+      - --cpu-boost
+      - --startup-probe=httpGet.path=/api/health,httpGet.port=8080,periodSeconds=5,timeoutSeconds=3,failureThreshold=36
+      - --quiet
 
 images:
   - ${_LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_IMAGE}:${_TAG}

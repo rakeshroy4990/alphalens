@@ -26,7 +26,7 @@ onMounted(() => {
         {{ homeContent.sections.universe.heading }}
       </h2>
       <p class="mt-2 text-slate-600">{{ homeContent.sections.universe.subheading }}</p>
-      <p v-if="instruments.loading" class="mt-4 text-sm text-slate-500">Loading instruments…</p>
+      <p v-if="instruments.loading" class="mt-4 text-sm text-slate-500">Loading stocks…</p>
       <p v-if="instruments.error" class="mt-4 text-sm text-rose-600">{{ instruments.error }}</p>
       <ul class="mt-6 divide-y divide-slate-200 rounded-xl border border-slate-200">
         <li v-for="item in instruments.items" :key="item.instrumentId">
@@ -49,7 +49,7 @@ onMounted(() => {
         {{ homeContent.sections.method.heading }}
       </h2>
       <p class="mt-2 text-slate-600">{{ homeContent.sections.method.subheading }}</p>
-      <ul class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <ul class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <li
           v-for="item in homeContent.sections.method.items"
           :key="item.title"

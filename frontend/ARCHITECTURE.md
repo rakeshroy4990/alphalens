@@ -5,8 +5,8 @@ AlphaLens follows the same chrome and layering as `frontend-hospital/ARCHITECTUR
 ## 1) High-level flow
 
 1. User lands on a Vue Router path (`/`, `/screener`, `/stocks/:instrumentId`, …).
-2. `App.vue` mounts the layout.
-3. `AppLayout` renders shared **header**, **page body**, and **footer**.
+2. The router restores the session via `GET /api/auth/me` (cookie). Watchlists and portfolio require a signed-in account; the **login/register UI is a popup**, not a page.
+3. `AppLayout` renders shared **header**, **page body**, **footer**, and `GlobalPopup`.
 4. The home page adds a **hero** plus section cards.
 5. Views call stores. Stores call services. Services are the only HTTP boundary.
 
@@ -17,8 +17,8 @@ AlphaLens follows the same chrome and layering as `frontend-hospital/ARCHITECTUR
 - **Dumb/pure UI** — `src/components/primitives/` (`HeroSection`, `SectionCard`)
 - **Page views** — `src/views/`
 - **Page/chrome config** — `src/configs/siteChrome.ts`
-- **Service/API** — `src/services/`
-- **State** — `src/stores/`
+- **Service/API** — `src/services/` (HTTP only; `apiClient` sends cookies)
+- **State** — `src/stores/` (`auth.store` for session and form; `popup.store` for login/register modals). Tokens stay in httpOnly cookies.
 
 ## 3) Home page composition
 
@@ -26,7 +26,7 @@ Same order as the hospital public home:
 
 1. Sticky header (brand, nav, primary CTA, mobile menu)
 2. Hero (title, subtitle, CTAs, stats, search)
-3. Section cards (instrument master, method)
+3. Section cards (stock information, method)
 4. Footer (research disclaimer)
 
 **Do not show System status** on any research page.

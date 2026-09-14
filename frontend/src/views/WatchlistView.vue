@@ -13,7 +13,7 @@ async function reload() {
 
 onMounted(() => {
   void reload().catch(() => {
-    error.value = 'Unable to load watchlists.';
+    error.value = 'Unable to load watchlists. Sign in if you have not already.';
   });
 });
 

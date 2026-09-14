@@ -22,7 +22,7 @@ trap cleanup EXIT INT TERM
 start_frontend
 
 echo ""
-echo "UI : http://127.0.0.1:$UI_PORT"
+echo "UI : http://localhost:$UI_PORT"
 echo "The Vite proxy expects the API on http://127.0.0.1:${BACKEND_PORT}."
 echo "Press Ctrl+C to stop the UI."
 echo ""

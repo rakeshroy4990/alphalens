@@ -1,5 +1,6 @@
 package com.alphalens.controller;
 
+import com.alphalens.auth.CurrentUser;
 import com.alphalens.dto.response.PageResponse;
 import com.alphalens.service.workspace.WorkspaceService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,62 +28,47 @@ public class WorkspaceController {
     }
 
     @GetMapping("/watchlists")
-    public List<Map<String, Object>> watchlists(@RequestHeader(value = "X-User-Id", required = false) String userHeader) {
-        return workspaceService.listWatchlists(user(userHeader));
+    public List<Map<String, Object>> watchlists() {
+        return workspaceService.listWatchlists(user());
     }
 
     @PostMapping("/watchlists")
-    public Map<String, Object> createWatchlist(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, String> body) {
-        return workspaceService.createWatchlist(user(userHeader), body.get("name"));
+    public Map<String, Object> createWatchlist(@RequestBody Map<String, String> body) {
+        return workspaceService.createWatchlist(user(), body.get("name"));
     }
 
     @GetMapping("/watchlists/{id}")
-    public Map<String, Object> watchlist(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id) {
-        return workspaceService.getWatchlist(user(userHeader), id);
+    public Map<String, Object> watchlist(@PathVariable long id) {
+        return workspaceService.getWatchlist(user(), id);
     }
 
     @PostMapping("/watchlists/{id}/items")
-    public Map<String, Object> addItem(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id,
-            @RequestBody Map<String, Long> body) {
-        return workspaceService.addWatchlistItem(user(userHeader), id, body.get("instrumentId"));
+    public Map<String, Object> addItem(@PathVariable long id, @RequestBody Map<String, Long> body) {
+        return workspaceService.addWatchlistItem(user(), id, body.get("instrumentId"));
     }
 
     @DeleteMapping("/watchlists/{id}/items/{itemId}")
-    public Map<String, Object> removeItem(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id,
-            @PathVariable long itemId) {
-        return workspaceService.removeWatchlistItem(user(userHeader), id, itemId);
+    public Map<String, Object> removeItem(@PathVariable long id, @PathVariable long itemId) {
+        return workspaceService.removeWatchlistItem(user(), id, itemId);
     }
 
     @PostMapping("/watchlists/{id}/reorder")
-    public Map<String, Object> reorder(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id,
-            @RequestBody Map<String, List<Long>> body) {
-        return workspaceService.reorderWatchlist(user(userHeader), id, body.getOrDefault("itemIds", List.of()));
+    public Map<String, Object> reorder(@PathVariable long id, @RequestBody Map<String, List<Long>> body) {
+        return workspaceService.reorderWatchlist(user(), id, body.getOrDefault("itemIds", List.of()));
     }
 
     @GetMapping("/alerts")
-    public List<Map<String, Object>> alerts(@RequestHeader(value = "X-User-Id", required = false) String userHeader) {
-        return workspaceService.listAlerts(user(userHeader));
+    public List<Map<String, Object>> alerts() {
+        return workspaceService.listAlerts(user());
     }
 
     @PostMapping("/alerts")
-    public Map<String, Object> createAlert(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> createAlert(@RequestBody Map<String, Object> body) {
         Number instrumentId = (Number) body.get("instrumentId");
         @SuppressWarnings("unchecked")
         Map<String, Object> definition = (Map<String, Object>) body.getOrDefault("definition", Map.of());
         return workspaceService.createAlert(
-                user(userHeader),
+                user(),
                 instrumentId.longValue(),
                 String.valueOf(body.get("type")),
                 definition
@@ -91,11 +76,9 @@ public class WorkspaceController {
     }
 
     @PostMapping("/coverage-requests")
-    public Map<String, Object> coverage(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> coverage(@RequestBody Map<String, Object> body) {
         Long instrumentId = body.get("instrumentId") == null ? null : ((Number) body.get("instrumentId")).longValue();
-        return workspaceService.requestCoverage(user(userHeader), instrumentId, (String) body.get("symbol"));
+        return workspaceService.requestCoverage(user(), instrumentId, (String) body.get("symbol"));
     }
 
     @GetMapping("/coverage-requests")
@@ -104,37 +87,28 @@ public class WorkspaceController {
     }
 
     @GetMapping("/user-algorithms")
-    public List<Map<String, Object>> algorithms(@RequestHeader(value = "X-User-Id", required = false) String userHeader) {
-        return workspaceService.listAlgorithms(user(userHeader));
+    public List<Map<String, Object>> algorithms() {
+        return workspaceService.listAlgorithms(user());
     }
 
     @PostMapping("/user-algorithms")
-    public Map<String, Object> saveAlgorithm(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody JsonNode body) {
-        return workspaceService.saveAlgorithm(user(userHeader), body.path("name").asText(), body.path("definition"));
+    public Map<String, Object> saveAlgorithm(@RequestBody JsonNode body) {
+        return workspaceService.saveAlgorithm(user(), body.path("name").asText(), body.path("definition"));
     }
 
     @PostMapping("/user-algorithms/{id}/run")
-    public Map<String, Object> runAlgorithm(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id,
-            @RequestBody Map<String, Long> body) {
-        return workspaceService.runAlgorithm(user(userHeader), id, body.get("instrumentId"));
+    public Map<String, Object> runAlgorithm(@PathVariable long id, @RequestBody Map<String, Long> body) {
+        return workspaceService.runAlgorithm(user(), id, body.get("instrumentId"));
     }
 
     @PostMapping("/user-algorithms/{id}/duplicate")
-    public Map<String, Object> duplicate(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id) {
-        return workspaceService.duplicateAlgorithm(user(userHeader), id);
+    public Map<String, Object> duplicate(@PathVariable long id) {
+        return workspaceService.duplicateAlgorithm(user(), id);
     }
 
     @DeleteMapping("/user-algorithms/{id}")
-    public void deleteAlgorithm(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @PathVariable long id) {
-        workspaceService.deleteAlgorithm(user(userHeader), id);
+    public void deleteAlgorithm(@PathVariable long id) {
+        workspaceService.deleteAlgorithm(user(), id);
     }
 
     @PostMapping("/screener")
@@ -146,20 +120,18 @@ public class WorkspaceController {
     }
 
     @PostMapping("/saved-screens")
-    public Map<String, Object> saveScreen(
-            @RequestHeader(value = "X-User-Id", required = false) String userHeader,
-            @RequestBody Map<String, Object> body) {
+    public Map<String, Object> saveScreen(@RequestBody Map<String, Object> body) {
         @SuppressWarnings("unchecked")
         Map<String, Object> filters = (Map<String, Object>) body.getOrDefault("filters", Map.of());
-        return workspaceService.saveScreen(user(userHeader), (String) body.get("name"), filters);
+        return workspaceService.saveScreen(user(), (String) body.get("name"), filters);
     }
 
     @GetMapping("/saved-screens")
-    public List<Map<String, Object>> savedScreens(@RequestHeader(value = "X-User-Id", required = false) String userHeader) {
-        return workspaceService.savedScreens(user(userHeader));
+    public List<Map<String, Object>> savedScreens() {
+        return workspaceService.savedScreens(user());
     }
 
-    private UUID user(String header) {
-        return workspaceService.userId(header);
+    private UUID user() {
+        return CurrentUser.requireId();
     }
 }

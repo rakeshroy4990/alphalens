@@ -41,7 +41,7 @@ Then:
 ./scripts/start-backend.sh
 ```
 
-Local Docker is skipped. Flyway applies V1–V3 on an empty project.
+`SPRING_DATASOURCE_URL` is used as-is from `.env` for local `bootRun` and for Cloud Run. Local Docker Postgres starts only when that URL points at localhost. Flyway applies pending migrations on the configured database.
 
 ## Properties (all layers)
 
@@ -54,7 +54,9 @@ Local Docker is skipped. Flyway applies V1–V3 on an empty project.
 
 ## Security
 
-Flyway **V3** enables RLS and revokes PostgREST `anon` / `authenticated` when those roles exist.
+Flyway **V5** enables RLS on `public` tables created after V3 and revokes PostgREST `anon` / `authenticated`. It does **not** `ALTER` `flyway_schema_history` (that deadlocks Flyway and hangs Cloud Run startup). Grants on that table are still revoked. The Vue app does not use the Data API. You can also turn off **Settings → API → Enable Data API** in the Supabase dashboard.
+
+Do not edit V5 after the first successful Cloud Run apply — Flyway will fail checksum validation and the new revision will not start.
 
 | Do | Do not |
 | --- | --- |

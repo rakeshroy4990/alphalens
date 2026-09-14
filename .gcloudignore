@@ -3,6 +3,7 @@
 **/.env
 **/.env.*
 !**/.env.example
+# Keep local Vite overrides off the Cloud image. The Dockerfile sets VITE_API_BASE_URL=/api.
 **/node_modules
 frontend/dist
 backend/.gradle

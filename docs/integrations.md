@@ -15,6 +15,7 @@ Core rule: application code depends on **internal ports** (`MarketDataProvider`,
 | Email / notification provider | Alert delivery | Production | Pending (`NotificationPort` only) | Server | Verify before Phase 16 production send |
 | Payment provider (Razorpay / Stripe) | Subscriptions | Production | Pending | Server | Phase 47 — wrap in `BillingProvider` |
 | Product analytics | Usage analytics | Production | Pending | Client/Server | Verify DPDP + no PII leakage; Phase 45+ |
+| Google OAuth | Sign-in with Google access token (GIS) | Production | Optional | Server `APP_GOOGLE_OAUTH_WEB_CLIENT_ID`; Vue `VITE_GOOGLE_OAUTH_CLIENT_ID` (public; `VITE_GOOGLE_CLIENT_ID` fallback) | Google OAuth client for the AlphaLens web origin |
 | Firebase Hosting | Static Vue frontend | Production | Active (`alphalens-a3cce`) | CLI (`firebase login`) | Confirm Firebase/Google Cloud billing |
 | Google Cloud | Artifact Registry, Cloud Build, Cloud Run, Cloud SQL | Production | Active (`alphalens-508509`) | CLI (`gcloud auth`) | Confirm billing and IAM |
 

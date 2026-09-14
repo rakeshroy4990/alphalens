@@ -18,7 +18,7 @@ Use if TrueData cannot license AlphaLens, or as a parallel quote. Official terms
 9. Extended / bulk historical beyond the published 3–6 month intraday windows?
 10. `AdjustSplits` coverage: bonus, rights, dividends, mergers, symbol/ISIN changes?
 11. Separate corporate-action / fundamental API entitlements and keys?
-12. ISIN-based instrument mapping?
+12. ISIN-based stock identification mapping?
 13. Official REST base URL, auth (`accessKey`), rate limits, and `GetLimitation` for a commercial key?
 14. Trial that matches commercial display, not only desktop charting plugins?
 

@@ -10,15 +10,55 @@ BACKEND_PORT="${BACKEND_PORT:-8088}"
 UI_PORT="${UI_PORT:-5173}"
 RUN_TESTS="${RUN_TESTS:-0}"
 
+docker_daemon_reachable() {
+  command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
+}
+
 ensure_docker_host() {
-  if [[ -n "${DOCKER_HOST:-}" ]]; then
-    return
-  fi
   local colima_sock="${HOME}/.colima/default/docker.sock"
-  if [[ -S "$colima_sock" ]]; then
+
+  if [[ -z "${DOCKER_HOST:-}" && -S "$colima_sock" ]]; then
     export DOCKER_HOST="unix://${colima_sock}"
     echo "Using Colima Docker socket: $DOCKER_HOST"
   fi
+
+  if docker_daemon_reachable; then
+    return
+  fi
+
+  if ! command -v colima >/dev/null 2>&1; then
+    return
+  fi
+
+  echo "Docker daemon is not reachable. Starting Colima..."
+  if ! colima start; then
+    echo "Failed to start Colima. Start it manually with: colima start" >&2
+    exit 1
+  fi
+
+  local i
+  for i in $(seq 1 60); do
+    if [[ -S "$colima_sock" ]]; then
+      break
+    fi
+    sleep 1
+  done
+
+  if [[ -z "${DOCKER_HOST:-}" && -S "$colima_sock" ]]; then
+    export DOCKER_HOST="unix://${colima_sock}"
+    echo "Using Colima Docker socket: $DOCKER_HOST"
+  fi
+
+  for i in $(seq 1 30); do
+    if docker_daemon_reachable; then
+      echo "Colima Docker daemon is ready."
+      return
+    fi
+    sleep 1
+  done
+
+  echo "Colima started, but the Docker daemon is still not reachable at ${DOCKER_HOST:-the default socket}." >&2
+  exit 1
 }
 
 docker_compose() {
@@ -115,6 +155,65 @@ describe_port_owner() {
   done
 }
 
+kill_matching_processes() {
+  local pattern="$1"
+  local label="$2"
+  local pids
+
+  pids="$(pgrep -f "$pattern" || true)"
+  if [[ -z "$pids" ]]; then
+    return
+  fi
+
+  echo "Stopping leftover $label: $pids"
+  # Include stopped (Ctrl+Z) jobs — those never bind a port.
+  kill -CONT $pids 2>/dev/null || true
+  if ! kill $pids 2>/dev/null; then
+    kill -9 $pids 2>/dev/null || true
+  fi
+
+  local i
+  for i in $(seq 1 20); do
+    if [[ -z "$(pgrep -f "$pattern" || true)" ]]; then
+      echo "Stopped leftover $label."
+      return
+    fi
+    sleep 0.25
+  done
+
+  pids="$(pgrep -f "$pattern" || true)"
+  if [[ -n "$pids" ]]; then
+    echo "Force-killing leftover $label: $pids" >&2
+    kill -9 $pids 2>/dev/null || true
+    sleep 0.5
+  fi
+}
+
+# Spring that never reaches Tomcat is invisible to kill_port.
+kill_stale_backend() {
+  kill_matching_processes 'com.alphalens.AlphaLensApplication' 'AlphaLens Java processes'
+  kill_matching_processes 'GradleWrapperMain bootRun' 'Gradle bootRun wrappers'
+}
+
+wait_for_http() {
+  local url="$1"
+  local label="$2"
+  local attempts="${3:-90}"
+  local i
+
+  echo "Waiting for $label at $url ..."
+  for i in $(seq 1 "$attempts"); do
+    if curl -sf --max-time 2 "$url" >/dev/null 2>&1; then
+      echo "$label is ready."
+      return 0
+    fi
+    sleep 1
+  done
+
+  echo "$label did not become ready after ${attempts}s. The UI /api proxy will return 502." >&2
+  return 1
+}
+
 kill_port() {
   local port="$1"
   local pids
@@ -153,25 +252,18 @@ uses_local_postgres() {
   [[ "$url" == *"localhost"* || "$url" == *"127.0.0.1"* ]]
 }
 
-prefer_local_postgres_unless_supabase_forced() {
-  if [[ "${USE_SUPABASE:-0}" == "1" ]]; then
-    return
-  fi
-  local url="${SPRING_DATASOURCE_URL:-}"
-  if [[ "$url" == *"supabase.com"* ]]; then
-    echo "Supabase URL is set, but USE_SUPABASE=1 is not. Using local Docker Postgres."
-    echo "Export USE_SUPABASE=1 to force the remote project."
-    export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/alphalens"
-    export SPRING_DATASOURCE_USERNAME="alphalens"
-    export SPRING_DATASOURCE_PASSWORD="alphalens"
-  fi
+log_datasource_target() {
+  local url="${SPRING_DATASOURCE_URL:-jdbc:postgresql://localhost:5432/alphalens}"
+  local redacted
+  redacted="$(printf '%s' "$url" | sed -E 's#(://)[^/@]+@#\1***@#')"
+  echo "Using PostgreSQL from SPRING_DATASOURCE_URL: ${redacted}"
 }
 
 start_postgres() {
   load_backend_env
-  prefer_local_postgres_unless_supabase_forced
+  log_datasource_target
   if ! uses_local_postgres; then
-    echo "Using remote PostgreSQL from SPRING_DATASOURCE_URL. Skipping local Docker."
+    echo "Remote PostgreSQL configured. Skipping local Docker."
     return
   fi
 
@@ -207,7 +299,14 @@ start_frontend() {
   echo "Starting UI on port $UI_PORT..."
   (
     cd "$FRONTEND_DIR"
-    npm run dev -- --host 127.0.0.1 --port "$UI_PORT"
+    # frontend/.env may hold the Cloud Run URL for Firebase builds. Vite
+    # embeds VITE_* at startup, so local npm run dev must force the proxy.
+    if [[ "${USE_REMOTE_API:-0}" != "1" ]]; then
+      export VITE_API_BASE_URL="/api"
+    fi
+    echo "UI API base: ${VITE_API_BASE_URL:-/api} (local proxy → http://127.0.0.1:$BACKEND_PORT)"
+    # Bind localhost (not 127.0.0.1): Google OAuth origins treat them as different sites.
+    npm run dev -- --host localhost --port "$UI_PORT"
   ) &
   UI_PID=$!
 }
@@ -218,7 +317,7 @@ start_backend() {
     cd "$BACKEND_DIR"
     setup_gradle_java
     load_backend_env
-    prefer_local_postgres_unless_supabase_forced
+    log_datasource_target
     local gradle_bin
     gradle_bin="$(resolve_gradle)"
     "$gradle_bin" bootRun --args="--server.port=$BACKEND_PORT"

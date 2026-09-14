@@ -8,6 +8,8 @@
 infrastructure/gcp/project.env
 !.env.example
 !**/.env.example
+!.env.development
+!**/.env.development
 !infrastructure/gcp/project.env.example
 
 # Node

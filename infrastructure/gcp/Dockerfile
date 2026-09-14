@@ -15,6 +15,8 @@ WORKDIR /src
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
+# Relative /api is required here: nginx in this image proxies /api to Java.
+# Firebase Hosting is a different build and must use the absolute Cloud Run URL.
 ENV VITE_API_BASE_URL=/api
 RUN npm run build
 

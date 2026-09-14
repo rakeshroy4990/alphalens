@@ -48,7 +48,7 @@ const emit = defineEmits<{
         </ul>
       </div>
       <form class="flex min-h-0 min-w-0 flex-col justify-center gap-3" @submit.prevent="emit('search')">
-        <label class="text-sm font-medium text-slate-700" for="hero-search">Search the master</label>
+        <label class="text-sm font-medium text-slate-700" for="hero-search">Search stocks</label>
         <input
           id="hero-search"
           :value="searchQuery"

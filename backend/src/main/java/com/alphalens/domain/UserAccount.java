@@ -36,6 +36,9 @@ public class UserAccount {
     @Column(nullable = false, length = 32)
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(name = "token_version", nullable = false)
+    private long tokenVersion = 1L;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -81,6 +84,22 @@ public class UserAccount {
 
     public UserStatus getStatus() {
         return status;
+    }
+
+    public long getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void setStatus(UserStatus status) {
+        this.status = status;
+    }
+
+    public void setTokenVersion(long tokenVersion) {
+        this.tokenVersion = tokenVersion;
     }
 
     public Instant getCreatedAt() {

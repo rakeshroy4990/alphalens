@@ -13,7 +13,7 @@ describe('screener store', () => {
     vi.mocked(screenStocks).mockReset();
   });
 
-  it('loads matching instruments from the API', async () => {
+  it('loads matching stocks from the API', async () => {
     vi.mocked(screenStocks).mockResolvedValue({
       items: [
         {

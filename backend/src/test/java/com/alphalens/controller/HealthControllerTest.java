@@ -1,5 +1,7 @@
 package com.alphalens.controller;
 
+import com.alphalens.auth.i18n.ApiMessageResolver;
+import com.alphalens.auth.security.BearerTokenAuthenticator;
 import com.alphalens.config.CorsConfig;
 import com.alphalens.config.SecurityConfig;
 import com.alphalens.domain.ComponentStatus;
@@ -22,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = HealthController.class, properties = {
         "spring.application.name=alphalens-backend",
-        "app.cors.allowed-origin-patterns=http://localhost:*"
+        "app.cors.allowed-origin-patterns=http://localhost:*",
+        "app.auth.public-path-prefixes=/api/health,/error"
 })
 @Import({SecurityConfig.class, CorsConfig.class, HealthResponseMapper.class})
 class HealthControllerTest {
@@ -32,6 +35,12 @@ class HealthControllerTest {
 
     @MockitoBean
     private HealthService healthService;
+
+    @MockitoBean
+    private BearerTokenAuthenticator bearerTokenAuthenticator;
+
+    @MockitoBean
+    private ApiMessageResolver apiMessageResolver;
 
     @Test
     void returnsOkWhenHealthy() throws Exception {

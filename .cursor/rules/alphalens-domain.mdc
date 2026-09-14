@@ -1,13 +1,35 @@
 ---
-description: AlphaLens instrument model, financial integrity, testing, UI, and regulatory rules
+description: AlphaLens stock identification, financial integrity, testing, UI, and regulatory rules
 alwaysApply: true
 ---
 
 # AlphaLens — Domain, Integrity, UI
 
-## Canonical instrument
+## Product language
 
-Never use NSE symbol as the primary identifier. Use internal `instrumentId` everywhere.
+Use this stack in docs and UI. Keep Java `Instrument` / `instrumentId` as the technical record.
+
+```text
+Stock Information
+    ↓
+Stock Identification
+    ↓
+Market Data
+    ↓
+Financial Data
+    ↓
+Valuation
+    ↓
+Algorithms
+    ↓
+Portfolio
+```
+
+## Stock Information & Identification
+
+Goal: one reliable record for every stock so the system knows which company and exchange-listed stock each piece of data belongs to. The same company can have NSE/BSE listings, different symbols, ISINs, corporate actions, price data, and financial data.
+
+Never use NSE symbol as the primary identifier. Use internal `instrumentId` everywhere in code.
 
 ```text
 Instrument: id, isin, nseSymbol, bseSymbol, companyName, shortName,
@@ -40,7 +62,7 @@ Feel: Bloomberg simplicity + Tickertape accessibility + modern SaaS. Avoid clutt
 
 Stock page priority: Price → Chart → Score → Why → Fundamentals → Valuation → Risks → News.
 
-Use consistent terminology. Business logic lives in services/composables/stores, not Vue templates.
+Use consistent terminology (never "instrument" in UI copy). Business logic lives in services/composables/stores, not Vue templates.
 
 ## Regulatory / product safety
 

@@ -28,6 +28,13 @@ DATA SOURCES → INGESTION → NORMALIZATION → PostgreSQL + TimescaleDB
   → REDIS → DOMAIN SERVICES (Chart / Algo / Portfolio) → REST API → Vue
 ```
 
+Product language (docs and UI; Java still uses `Instrument`):
+
+```text
+Stock Information → Stock Identification → Market Data → Financial Data
+  → Valuation → Algorithms → Portfolio
+```
+
 Kite is a broker adapter. Do not design market data around Kite.
 
 ## Product differentiation

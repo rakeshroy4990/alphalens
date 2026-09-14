@@ -52,10 +52,11 @@ gcloud artifacts repositories create alphalens \
 # From your machine (defaults to alphalens-508509)
 PUSH=1 ./scripts/gcp-build-image.sh
 
-# Or Cloud Build (amd64 — use this for Cloud Run)
-gcloud builds submit --project=alphalens-508509 --config=cloudbuild.yaml \
-  --substitutions=_LOCATION=asia-south1,_REPOSITORY=alphalens,_IMAGE=alphalens,_TAG=latest
+# Cloud Build (amd64) — builds, pushes, and rolls Cloud Run
+gcloud builds submit --project=alphalens-508509 --config=cloudbuild.yaml
 ```
+
+That is the usual release command. Cloud Run does not pick up a new `:latest` image by itself; `cloudbuild.yaml` now deploys the revision after the push. Existing env and Secret Manager bindings stay on the service.
 
 Image:
 
@@ -82,25 +83,42 @@ Placeholder env: `infrastructure/gcp/env.example`.
 
 ## 4. Deploy Cloud Run
 
-`--set-env-vars` splits on commas, so CORS values like `https://*.run.app` must go in a file:
+Code changes: `gcloud builds submit` (section 2) already rolls Cloud Run.
+
+Env or secret changes only — no image rebuild:
 
 ```bash
-# Edit HOST in infrastructure/gcp/cloud-run-env.yaml first.
 gcloud run deploy alphalens \
   --project=alphalens-508509 \
   --region=asia-south1 \
   --image=asia-south1-docker.pkg.dev/alphalens-508509/alphalens/alphalens:latest \
-  --port=8080 \
-  --memory=1Gi \
-  --cpu=2 \
-  --allow-unauthenticated \
   --env-vars-file=infrastructure/gcp/cloud-run-env.yaml \
   --set-secrets=SPRING_DATASOURCE_PASSWORD=SPRING_DATASOURCE_PASSWORD:latest
 ```
 
-Or `gcloud run services replace infrastructure/gcp/cloud-run.yaml --region=asia-south1 --project=alphalens-508509`.
+`--set-env-vars` splits on commas, so CORS values belong in `cloud-run-env.yaml`.
 
-Startup probe: `GET /api/health`. A missing database returns 503 until Postgres is reachable.
+One-time Cloud Build IAM (if the deploy step fails with permission denied):
+
+```bash
+PROJECT_NUMBER=113523778150
+gcloud projects add-iam-policy-binding alphalens-508509 \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role=roles/run.admin
+gcloud iam service-accounts add-iam-policy-binding \
+  ${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+  --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+  --role=roles/iam.serviceAccountUser \
+  --project=alphalens-508509
+```
+
+Startup probe must be **HTTP** `GET /api/health` (not TCP on 8080). Nginx binds `$PORT` immediately; Java needs ~35s on 8088 plus Flyway. A TCP probe marks the revision ready, Cloud Run throttles CPU, and `/api/*` returns nginx **502**.
+
+The all-in-one image builds Vue with `VITE_API_BASE_URL=/api` so the browser stays on the Cloud Run origin and nginx proxies `/api` to Java. Do not bake a `localhost` or Firebase-only URL into that image.
+
+Flyway **V5** (RLS) skips `flyway_schema_history` and uses an 8s lock timeout so a blocked `ALTER` cannot hang past the startup probe. After V5 has applied on Supabase, do not change that file.
+
+`cloudbuild.yaml` sets `--no-cpu-throttling` and the HTTP probe on each roll.
 
 ## 5. Deploy Compute Engine (container)
 
